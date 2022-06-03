@@ -1,1 +1,1 @@
-Environment editor for making continuous rooms.
+Environment editor for making continuous roombarooms.
