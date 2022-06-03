@@ -2,11 +2,10 @@ import sys
 from turtle import right
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QGridLayout
 from PyQt5.QtCore import Qt, QPoint, QRect
-from PyQt5.QtGui import QPixmap, QPainter
+from PyQt5.QtGui import QPixmap, QPainter, QBrush
 
-colors = {0: 'darkgrey', 1: 'gold', 2: 'brown', 3: 'darkred'}
-
-selected = 0
+colors = {0: 'darkgrey', 1: 'yellow', 2: 'darkgreen', 3: 'darkred'}
+qt_colors = [Qt.darkGray, Qt.yellow, Qt.darkGreen, Qt.darkRed]
 
 
 class MyApp(QWidget):
@@ -14,6 +13,8 @@ class MyApp(QWidget):
         super().__init__()
         self.window_width, self.window_height = 1200, 800
         self.setMinimumSize(self.window_width, self.window_height)
+
+        self.selected = 0
 
         layout = QHBoxLayout()
         layout.addStretch(1)
@@ -68,6 +69,8 @@ class MyApp(QWidget):
         self.buttons[input].setStyleSheet(
             "border :5px solid;" f"background-color : {colors[input]}")
 
+        self.selected = input
+
         # selected = 4
 
     def paintEvent(self, event):
@@ -76,6 +79,8 @@ class MyApp(QWidget):
         if not self.begin.isNull() and not self.destination.isNull():
             rect = QRect(self.begin, self.destination)
             painter.drawRect(rect.normalized())
+            painter.fillRect(rect.normalized(), QBrush(
+                qt_colors[self.selected]))
             # self.update()
 
     def mousePressEvent(self, event):
@@ -97,7 +102,8 @@ class MyApp(QWidget):
             rect = QRect(self.begin, self.destination)
             painter = QPainter(self.pix)
             painter.drawRect(rect.normalized())
-
+            painter.fillRect(rect.normalized(), QBrush(
+                qt_colors[self.selected]))
             self.begin, self.destination = QPoint(), QPoint()
 
             self.update()
