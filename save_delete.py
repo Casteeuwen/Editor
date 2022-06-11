@@ -36,6 +36,7 @@ class MyApp(QWidget):
         self.btn_3 = QPushButton('Death', self)
         self.btn_4 = QPushButton('Delete', self)
         self.btn_5 = QPushButton('Agent', self)
+        self.btn_6 = QPushButton('Export', self)
         self.btn_0.setStyleSheet(f"background-color : {colors[0]}")
         self.btn_1.setStyleSheet(f"background-color : {colors[1]}")
         self.btn_2.setStyleSheet(f"background-color : {colors[2]}")
@@ -53,6 +54,8 @@ class MyApp(QWidget):
         self.btn_4.clicked.connect(lambda ch, i=4: self.genericbutton(i))
         self.btn_5.clicked.connect(lambda ch, i=5: self.genericbutton(i))
 
+        self.btn_6.clicked.connect(self.save_to_json)
+
         self.rightside = QWidget()
         rightsidelayout = QGridLayout()
         rightsidelayout.setSpacing(10)
@@ -62,6 +65,7 @@ class MyApp(QWidget):
         rightsidelayout.addWidget(self.btn_3, 1, 1)
         rightsidelayout.addWidget(self.btn_4, 2, 0)
         rightsidelayout.addWidget(self.btn_5, 2, 1)
+        rightsidelayout.addWidget(self.btn_6, 3, 0)
         self.rightside.setLayout(rightsidelayout)
 
         self.rightsidewrapper = QWidget()
@@ -177,6 +181,10 @@ class MyApp(QWidget):
         rect = QRect(QPoint(botleftpoint), QSize(
             1 * self.SCALING, 1 * self.SCALING))
         return rect
+
+    def save_to_json(self):
+        print('should save neef')
+        # TODO Save to correct format!
 
 
 if __name__ == "__main__":
