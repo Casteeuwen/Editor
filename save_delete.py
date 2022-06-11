@@ -4,8 +4,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPu
 from PyQt5.QtCore import Qt, QPoint, QRect
 from PyQt5.QtGui import QPixmap, QPainter, QBrush
 
-colors = {0: 'darkgrey', 1: 'yellow', 2: 'darkgreen', 3: 'darkred'}
-qt_colors = [Qt.darkGray, Qt.yellow, Qt.darkGreen, Qt.darkRed]
+colors = {0: 'darkgrey', 1: 'yellow',
+          2: 'darkgreen', 3: 'darkred', 4: 'lightgrey'}
+qt_colors = [Qt.darkGray, Qt.yellow, Qt.darkGreen, Qt.darkRed, Qt.lightGray]
 
 
 class MyApp(QWidget):
@@ -29,17 +30,21 @@ class MyApp(QWidget):
         self.btn_1 = QPushButton('Goal', self)
         self.btn_2 = QPushButton('Dirty', self)
         self.btn_3 = QPushButton('Death', self)
+        self.btn_4 = QPushButton('Delete', self)
         self.btn_0.setStyleSheet(f"background-color : {colors[0]}")
         self.btn_1.setStyleSheet(f"background-color : {colors[1]}")
         self.btn_2.setStyleSheet(f"background-color : {colors[2]}")
         self.btn_3.setStyleSheet(f"background-color : {colors[3]}")
+        self.btn_4.setStyleSheet(f"background-color : {colors[4]}")
 
-        self.buttons = [self.btn_0, self.btn_1, self.btn_2, self.btn_3]
+        self.buttons = [self.btn_0, self.btn_1,
+                        self.btn_2, self.btn_3, self.btn_4]
 
         self.btn_0.clicked.connect(lambda ch, i=0: self.genericbutton(i))
         self.btn_1.clicked.connect(lambda ch, i=1: self.genericbutton(i))
         self.btn_2.clicked.connect(lambda ch, i=2: self.genericbutton(i))
         self.btn_3.clicked.connect(lambda ch, i=3: self.genericbutton(i))
+        self.btn_4.clicked.connect(lambda ch, i=4: self.genericbutton(i))
 
         self.rightside = QWidget()
         rightsidelayout = QGridLayout()
@@ -48,6 +53,7 @@ class MyApp(QWidget):
         rightsidelayout.addWidget(self.btn_1, 0, 1)
         rightsidelayout.addWidget(self.btn_2, 1, 0)
         rightsidelayout.addWidget(self.btn_3, 1, 1)
+        rightsidelayout.addWidget(self.btn_4, 2, 0)
         self.rightside.setLayout(rightsidelayout)
 
         self.rightsidewrapper = QWidget()
@@ -81,10 +87,12 @@ class MyApp(QWidget):
         painter.drawPixmap(QPoint(), self.pix)
         if not self.begin.isNull() and not self.destination.isNull():
             rect = QRect(self.begin, self.destination)
-            painter.drawRect(rect.normalized())
-            painter.fillRect(rect.normalized(), QBrush(
-                qt_colors[self.selected]))
-            # self.update()
+            if self.selected is not 4:
+                painter.drawRect(rect.normalized())
+                painter.fillRect(rect.normalized(), QBrush(
+                    qt_colors[self.selected]))
+            else:
+                painter.drawRect(rect.normalized())
 
     def mousePressEvent(self, event):
         if event.buttons() & Qt.LeftButton:
@@ -104,7 +112,16 @@ class MyApp(QWidget):
         if event.button() & Qt.LeftButton:
             rect = QRect(self.begin, self.destination)
 
-            self.shapeslist.append((rect, self.selected))
+            # Delete shapes in case of painter
+            # if self.selected is 4:
+            #     for otherrect, typeindex in self.shapeslist:
+            #         if otherrect.intersects(rect):
+            if self.selected is 4:
+                self.shapeslist = [
+                    item for item in self.shapeslist if not item[0].intersects(rect)]
+            else:
+                self.shapeslist.append((rect, self.selected))
+
             self.pix = QPixmap(self.rect().size())
             self.pix.fill(Qt.white)
 
