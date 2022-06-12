@@ -10,7 +10,7 @@ qt_colors = [Qt.darkGray, Qt.yellow, Qt.darkGreen,
              Qt.darkRed, Qt.lightGray, Qt.blue]
 
 to_json_mapping = {0: 'obstacles', 1: 'golds',
-                   2: 'goals', 3: 'death', 5: 'agent_block'}
+                   2: 'goals', 3: 'death', 5: 'agents'}
 
 
 class MyApp(QWidget):
@@ -21,7 +21,7 @@ class MyApp(QWidget):
         self.setMinimumSize(self.window_width, self.window_height)
 
         self.shapeslist = []
-        self.agentposition = None
+        # self.agentposition = None
         self.selected = 0
 
         layout = QHBoxLayout()
@@ -131,8 +131,8 @@ class MyApp(QWidget):
             #     for otherrect, typeindex in self.shapeslist:
             #         if otherrect.intersects(rect):
             if self.selected is 4:  # delete
-                if any(item[0].intersects(rect) and item[1] is 5 for item in self.shapeslist):
-                    self.agentposition = None
+                # if any(item[0].intersects(rect) and item[1] is 5 for item in self.shapeslist):
+                #     self.agentposition = None
                 self.shapeslist = [
                     item for item in self.shapeslist if not item[0].intersects(rect)]
             elif self.selected in [1, 2, 3]:
@@ -143,14 +143,14 @@ class MyApp(QWidget):
                 if not any(item[0].intersects(rect) and item[1] is not 0 for item in self.shapeslist):
                     self.shapeslist.append((rect, self.selected))
             elif self.selected is 5:
-                self.agentposition = None
-                self.shapeslist = [
-                    item for item in self.shapeslist if not item[1] is 5]
+                # self.agentposition = None
+                # self.shapeslist = [
+                #     item for item in self.shapeslist if not item[1] is 5]
                 print(self.destination)
                 rect = self.getBoundingBox(self.destination)
                 if not any(item[0].intersects(rect) for item in self.shapeslist):
                     self.shapeslist.append((rect, self.selected))
-                    self.agentposition = self.destination
+                    # self.agentposition = self.destination
 
             self.pix = QPixmap(self.rect().size())
             self.pix.fill(Qt.white)
@@ -160,16 +160,18 @@ class MyApp(QWidget):
             # self.shapeslist = sorted(self.shapeslist, key=lambda tup: tup[1])
 
             for shape, typeindex in self.shapeslist:
-                # if typeindexis not 5:
-                painter.drawRect(shape.normalized())
-                painter.fillRect(shape.normalized(), QBrush(
-                    qt_colors[typeindex]))
+                if typeindex is not 5:
+                    painter.drawRect(shape.normalized())
+                    painter.fillRect(shape.normalized(), QBrush(
+                        qt_colors[typeindex]))
 
-            if self.agentposition is not None:
-                painter.setPen(QPen(Qt.green,  1, Qt.SolidLine))
-                painter.drawEllipse(self.agentposition,
-                                    self.SCALING * 0.5, self.SCALING * 0.5)
-                painter.setPen(QPen())
+                else:
+                    painter.setPen(QPen(Qt.black,  3, Qt.SolidLine))
+                    painter.drawEllipse(shape.topLeft(
+                    ) + QPoint(self.SCALING * 0.5, self.SCALING * 0.5), self.SCALING * 0.5, self.SCALING * 0.5)
+                    painter.setPen(QPen())
+
+            # if self.agentposition is not None:
 
             self.begin, self.destination = QPoint(), QPoint()
             # print(painter)
@@ -203,7 +205,7 @@ class MyApp(QWidget):
 
         roomsize = [float((xmax - xmin))/self.SCALING,
                     float((ymax - ymin)) / self.SCALING]
-        print(f'roomsize: {roomsize}')
+        save_dict['roomsize'] = roomsize
 
         for item in self.shapeslist:
             if item[1] is not 5:
@@ -211,16 +213,20 @@ class MyApp(QWidget):
                     item[0], xmax, xmin, ymax, ymin)
                 save_dict.setdefault(
                     to_json_mapping[item[1]], []).append(itemcoords)
+            else:
+                itemcoords = self.get_coordinates_as_list(
+                    item[0], xmax, xmin, ymax, ymin)
+                save_dict.setdefault(
+                    to_json_mapping[item[1]], []).append([float(itemcoords[0][0] + itemcoords[3][0]) / 2.0, float(itemcoords[0][1] + itemcoords[3][1]) / 2.0])
 
-        if self.agentposition is not None:
-            save_dict['agent_position'] = [float(
-                self.agentposition.x() - xmin) / self.SCALING, float(self.agentposition.y() - ymin) / self.SCALING]
+        # if self.agentposition is not None:
+        #     save_dict['agent_position'] = [float(
+        #         self.agentposition.x() - xmin) / self.SCALING, float(self.agentposition.y() - ymin) / self.SCALING]
 
         print(save_dict)
 
     def get_coordinates_as_list(self, rect: QRect, xmax, xmin, ymax, ymin):
         top_left_offset = QPoint(xmin, ymin)
-        # print(f'offset: {top_left_offset}')
         coords_list = []
         for coord in [rect.topLeft(), rect.bottomLeft(), rect.topRight(), rect.bottomRight()]:
             coord: QPoint = coord - top_left_offset
