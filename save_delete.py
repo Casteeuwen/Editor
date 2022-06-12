@@ -9,12 +9,15 @@ colors = {0: 'darkgrey', 1: 'yellow',
 qt_colors = [Qt.darkGray, Qt.yellow, Qt.darkGreen,
              Qt.darkRed, Qt.lightGray, Qt.blue]
 
+to_json_mapping = {0: 'obstacles', 1: 'golds',
+                   2: 'goals', 3: 'death', 5: 'agent_block'}
+
 
 class MyApp(QWidget):
     def __init__(self):
         super().__init__()
         self.window_width, self.window_height = 1200, 800
-        self.SCALING = 80.0
+        self.SCALING = 40.0
         self.setMinimumSize(self.window_width, self.window_height)
 
         self.shapeslist = []
@@ -183,8 +186,48 @@ class MyApp(QWidget):
         return rect
 
     def save_to_json(self):
-        print('should save neef')
         # TODO Save to correct format!
+        save_dict = {}
+        for item in self.shapeslist:
+            print(item[0].getCoords())
+        # Get room coordinates
+        xmax = max([max([item[0].getCoords()[0], item[0].getCoords()[2]])
+                    for item in self.shapeslist])
+        xmin = min([min([item[0].getCoords()[0], item[0].getCoords()[2]])
+                    for item in self.shapeslist])
+        ymax = max([max([item[0].getCoords()[1], item[0].getCoords()[3]])
+                    for item in self.shapeslist])
+        ymin = min([min([item[0].getCoords()[1], item[0].getCoords()[3]])
+                    for item in self.shapeslist])
+        print([xmax, xmin, ymax, ymin])
+
+        roomsize = [float((xmax - xmin))/self.SCALING,
+                    float((ymax - ymin)) / self.SCALING]
+        print(f'roomsize: {roomsize}')
+
+        for item in self.shapeslist:
+            if item[1] is not 5:
+                itemcoords = self.get_coordinates_as_list(
+                    item[0], xmax, xmin, ymax, ymin)
+                save_dict.setdefault(
+                    to_json_mapping[item[1]], []).append(itemcoords)
+
+        if self.agentposition is not None:
+            save_dict['agent_position'] = [float(
+                self.agentposition.x() - xmin) / self.SCALING, float(self.agentposition.y() - ymin) / self.SCALING]
+
+        print(save_dict)
+
+    def get_coordinates_as_list(self, rect: QRect, xmax, xmin, ymax, ymin):
+        top_left_offset = QPoint(xmin, ymin)
+        # print(f'offset: {top_left_offset}')
+        coords_list = []
+        for coord in [rect.topLeft(), rect.bottomLeft(), rect.topRight(), rect.bottomRight()]:
+            coord: QPoint = coord - top_left_offset
+            x, y = float(coord.x()) / \
+                self.SCALING, float(coord.y()) / self.SCALING
+            coords_list.append([x, y])
+        return coords_list
 
 
 if __name__ == "__main__":
