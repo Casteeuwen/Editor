@@ -1,8 +1,9 @@
 import sys
 from turtle import right
-from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QGridLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QGridLayout, QInputDialog, QLineEdit
 from PyQt5.QtCore import Qt, QPoint, QRect, QDir, QSize
 from PyQt5.QtGui import QPixmap, QPainter, QBrush, QPen
+import json
 
 colors = {0: 'darkgrey', 1: 'yellow',
           2: 'darkgreen', 3: 'darkred', 4: 'lightgrey', 5: 'blue'}
@@ -224,6 +225,13 @@ class MyApp(QWidget):
         #         self.agentposition.x() - xmin) / self.SCALING, float(self.agentposition.y() - ymin) / self.SCALING]
 
         print(save_dict)
+
+        new_filename, ok = QInputDialog().getText(self, "QInputDialog().getText()",
+                                                  "Name your map:", QLineEdit.Normal,
+                                                  QDir().home().dirName())
+
+        with open(f'{new_filename}.json', 'w') as fp:
+            json.dump(save_dict, fp)
 
     def get_coordinates_as_list(self, rect: QRect, xmax, xmin, ymax, ymin):
         top_left_offset = QPoint(xmin, ymin)
