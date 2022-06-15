@@ -137,10 +137,8 @@ class MyApp(QWidget):
 
         return tole_x, tole_y, bori_x, bori_y
 
-    def wallsnap(self, rect: QRect):
-        # In case of overlap snap to closest wall edge
-        while any(item[0].intersects(rect) and item[1] is 0 for item in self.shapeslist):
-            print('it intersects!')
+    def singlewallsnap(self, rect: QRect):
+        if any(item[0].intersects(rect) and item[1] is 0 for item in self.shapeslist):
             intersectlist = [item for item in self.shapeslist if item[0].intersects(
                 rect) and item[1] is 0]
             rect_2: QRect = intersectlist[0][0]
@@ -150,15 +148,14 @@ class MyApp(QWidget):
             tole_x_2, tole_y_2, bori_x_2, bori_y_2 = self.getmaxlocations(
                 rect_2)
 
-            # vertic_0 = QRect(rect_2.topLeft(), rect_2.bottomLeft())
-            # vertic_1 = QRect(rect_2.topRight(), rect_2.bottomRight())
-            # horiz_0 = QRect(rect_2.topLeft(), rect_2.topRight())
-            # horiz_1 = QRect(rect_2.bottomLeft(), rect_2.bottomRight())
-
-            vertic_0 = QRect(QPoint(tole_x_2, tole_y_2), QPoint(tole_x_2, bori_y_2))
-            vertic_1 = QRect(QPoint(bori_x_2, tole_y_2), QPoint(bori_x_2, bori_y_2))
-            horiz_0 = QRect(QPoint(tole_x_2, tole_y_2), QPoint(bori_x_2, tole_y_2))
-            horiz_1 = QRect(QPoint(tole_x_2, bori_y_2), QPoint(bori_x_2, bori_y_2))
+            vertic_0 = QRect(QPoint(tole_x_2, tole_y_2),
+                             QPoint(tole_x_2, bori_y_2))
+            vertic_1 = QRect(QPoint(bori_x_2, tole_y_2),
+                             QPoint(bori_x_2, bori_y_2))
+            horiz_0 = QRect(QPoint(tole_x_2, tole_y_2),
+                            QPoint(bori_x_2, tole_y_2))
+            horiz_1 = QRect(QPoint(tole_x_2, bori_y_2),
+                            QPoint(bori_x_2, bori_y_2))
 
             if rect.intersects(vertic_0):
                 # print(rect.topLeft(), rect.topRight())
@@ -179,12 +176,46 @@ class MyApp(QWidget):
                 # print(rect.topLeft(), rect.topRight())
                 rect = QRect(QPoint(bori_x, bori_y), QPoint(
                     tole_x, bori_y_2))
-            break
         return rect
 
-        # Check if any of the points is really close to another existing point, and snap this edge to that
+    def cornersnap(self, rect: QRect):
+        tole_x, tole_y, bori_x, bori_y = self.getmaxlocations(rect)
+        tole, tori, bole, bori = QPoint(tole_x, tole_y), QPoint(
+            bori_x, tole_y), QPoint(tole_x, bori_y), QPoint(bori_x, bori_y)
+        rect_locs = [tole, tori, bole, bori]
+        for item in self.shapeslist:
+            if item[1] == 0:
+                rect_2 = item[0]
+                tole_x_2, tole_y_2, bori_x_2, bori_y_2 = self.getmaxlocations(
+                    rect_2)
+                tole_2, tori_2, bole_2, bori_2 = QPoint(tole_x_2, tole_y_2), QPoint(
+                    bori_x_2, tole_y_2), QPoint(tole_x_2, bori_y_2), QPoint(bori_x_2, bori_y_2)
+                rect_2_locs = [tole_2, tori_2, bole_2, bori_2]
 
-        return
+                for loc_2 in rect_2_locs:
+                    for index, loc in enumerate(rect_locs):
+                        dif = loc - loc_2
+                        if dif.manhattanLength() < 20.0:
+                            print('match found!')
+
+                            if index is 0:
+                                return QRect(loc_2, bori)
+                            elif index is 1:
+                                return QRect(loc_2, bole)
+                            elif index is 2:
+                                return QRect(loc_2, tori)
+                            elif index is 3:
+                                return QRect(loc_2, tole)
+
+        return rect
+
+    def snap(self, rect: QRect):
+        rect = self.singlewallsnap(rect)
+
+        rect = self.cornersnap(rect)
+        # rect = self.singlewallsnap(rect)
+
+        return rect
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.LeftButton:
@@ -234,7 +265,7 @@ class MyApp(QWidget):
         if event.button() & Qt.LeftButton:
             rect = QRect(self.clipPoint(self.begin, self.xmax, self.ymax), self.clipPoint(
                 self.destination, self.xmax, self.ymax))
-            rect = self.wallsnap(rect)
+            rect = self.snap(rect)
 
             # Delete shapes in case of painter
             # if self.selected is 4:
